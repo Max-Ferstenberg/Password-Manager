@@ -11,8 +11,8 @@
 
 class StrengthCheck {
 public:
-	StrengthCheck(const std::string& filename, const std::string& password);
-	void check(const std::string& password);
+	StrengthCheck(const std::string& filename);
+	bool check(const std::string& password);
 	bool isAlphaNumeric(const std::string& password);
 	bool isLongEnough(const std::string& password);
 	bool isSequential(const std::string& password);
