@@ -14,8 +14,7 @@
 //6. Check for upper and lower case characters - DONE!
 //7. Check for character repetition - DONE!
 
-StrengthCheck::StrengthCheck(const std::string& filename, const std::string& password) : v(), alphabet() {
-	std::cout << "Initialising strength checker...\n";
+StrengthCheck::StrengthCheck(const std::string& filename) : v(), alphabet() {
 	alphabet = { "abcdefghijklmnopqrstuvwxyz" };
 	std::ifstream file(filename);
 	std::string line;
@@ -25,23 +24,27 @@ StrengthCheck::StrengthCheck(const std::string& filename, const std::string& pas
 	}
 
 	file.close();
-
-	std::cout << "Strength Check Initialised...\n";
 }
 
-void StrengthCheck::check(const std::string& password) {
-	if (isAlphaNumeric(password)) std::cout << "Try a mix of numbers, letters and symbols!\n";
-	if (!isLongEnough(password)) std::cout << "Password should be at least 12 characters long.\n";
-	if (isSequential(password)) std::cout << "Avoid ascending/descending sequences of numbers and/or letters.\n";
-	if (isWord(password)) std::cout << "Avoid using English words directly.\n";
-	if (!upperLower(password)) std ::cout << "Try a mix of upper and lowercase letters!\n";
-	if (isRepetitive(password)) std::cout << "Avoid repetitive sequences of characters.\n";
+bool StrengthCheck::check(const std::string& password) {
+	if (isAlphaNumeric(password) || !isLongEnough(password) || isSequential(password) || isWord(password) || !upperLower(password) || isRepetitive(password)) {
+		if (isAlphaNumeric(password)) std::cout << "Try a mix of numbers, letters and symbols!\n";
+		if (!isLongEnough(password)) std::cout << "Password should be at least 12 characters long.\n";
+		if (isSequential(password)) std::cout << "Avoid ascending/descending sequences of numbers and/or letters.\n";
+		if (isWord(password)) std::cout << "Avoid using English words directly.\n";
+		if (!upperLower(password)) std::cout << "Try a mix of upper and lowercase letters!\n";
+		if (isRepetitive(password)) std::cout << "Avoid repetitive sequences of characters.\n";
+		return false;
+	}
+	else {
+		return true;
+	}
 }
 
 bool StrengthCheck::isAlphaNumeric(const std::string& password) {
 	//Check the password contains at least one symbol
 	for (int i = 0; i < password.length(); i++) {
-		if (!isalnum(password[i])) {
+		if (!isalnum(static_cast<unsigned char>(password[i]))) {
 			return false;
 		}
 	}
@@ -66,8 +69,8 @@ bool StrengthCheck::isSequential(const std::string& password) {
 
 	for (int i = 0; i < (password.length() - 1); i++) { //check until password length - 1 to avoid bounds error
 		//check for sequence of numbers
-		if (isdigit(password[i])) {
-			if (isdigit(password[i + 1]) && ((password[i] - 1 == password[i + 1]) || (password[i] + 1 == password[i + 1]))) {
+		if (isdigit(static_cast<unsigned char>(password[i]))) {
+			if (isdigit(static_cast<unsigned char>(password[i + 1])) && ((static_cast<unsigned char>(password[i]) - 1 == static_cast<unsigned char>(password[i + 1])) || (static_cast<unsigned char>(password[i]) + 1 == static_cast<unsigned char>(password[i + 1])))) {
 				std::cout << "Password contains invalid number sequence: " << password[i] << password[i + 1] << '\n';
 				return true;
 			}
@@ -76,14 +79,14 @@ bool StrengthCheck::isSequential(const std::string& password) {
 
 	for (int i = 0; i < (password.length()); i++) {
 		//check for sequence of letters
-		if (isalpha(password[i]) && i!=0) {
-			if (isalpha(password[i - 1]) && isalpha(password[i + 1])) {
-				int position1 = alphabet.find(tolower(password[i - 1]));
-				int position2 = alphabet.find(tolower(password[i]));
-				int position3 = alphabet.find(tolower(password[i + 1]));
+		if (isalpha(static_cast<unsigned char>(password[i])) && i != 0) {
+			if (isalpha(static_cast<unsigned char>(password[i - 1])) && isalpha(static_cast<unsigned char>(password[i + 1]))) {
+				size_t position1 = alphabet.find(tolower(static_cast<unsigned char>(password[i - 1])));
+				size_t position2 = alphabet.find(tolower(static_cast<unsigned char>(password[i])));
+				size_t position3 = alphabet.find(tolower(static_cast<unsigned char>(password[i + 1])));
 
 				if (((position2 + 1 == position3) && (position2 - 1 == position1)) || ((position2 - 1 == position3) && (position2 + 1 == position1))) {
-					std::cout << "Password contains invalid letter sequence: " << password[i-1] << password[i] << password[i+1] << '\n';
+					std::cout << "Password contains invalid letter sequence: " << password[i - 1] << password[i] << password[i + 1] << '\n';
 					return true;
 				}
 			}
@@ -97,8 +100,8 @@ bool StrengthCheck::isWord(const std::string& password) {
 	std::string substring = "";
 
 	for (int i = 0; i < password.length(); i++) {
-		if (isalpha(password[i])) {
-			substring += tolower(password[i]);
+		if (isalpha(static_cast<unsigned char>(password[i]))) {
+			substring += tolower(static_cast<unsigned char>(password[i]));
 			for (int j = 0; j < v.size(); j++) {
 				if (substring == v[j] && substring.length() > 3) {
 					std::cout << "Substring: " << substring << " found in dictionary\n";
@@ -118,11 +121,11 @@ bool StrengthCheck::upperLower(const std::string& password) {
 	bool hasUpper = false;
 	bool hasLower = false;
 	for (int i = 0; i < password.length(); i++) {
-		if (isupper(password[i])) {
+		if (isupper(static_cast<unsigned char>(password[i]))) {
 			hasUpper = true;
 		}
 
-		if (islower(password[i])) {
+		if (islower(static_cast<unsigned char>(password[i]))) {
 			hasLower = true;
 		}
 	}
@@ -138,7 +141,7 @@ bool StrengthCheck::upperLower(const std::string& password) {
 bool StrengthCheck::isRepetitive(const std::string& password) {
 	//Check for repeated characters
 	for (int i = 1; i < password.length(); i++) {
-		if (password[i] == password[i - 1] && password[i] == password[i+1]) {
+		if (password[i] == password[i - 1] && password[i] == password[i + 1]) {
 			std::cout << "Repetitive sequence found at: " << password[i - 1] << password[i] << password[i + 1] << '\n';
 			return true;
 		}
