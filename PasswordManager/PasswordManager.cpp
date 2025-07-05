@@ -3,48 +3,53 @@
 
 #include "StrengthCheck.h"
 #include "PasswordGenerator.h"
+#include "FileIO.h"
 
-bool PasswordStrengthCheck(StrengthCheck& StrengthChecker);
-void PasswordGen(PasswordGenerator& PassGen, StrengthCheck& StrengthChecker);
+void menu(PasswordGenerator& PassGen, StrengthCheck& StrengthChecker, FileIO& FileOperations);
+void PasswordStrengthCheck(PasswordGenerator& PassGen, StrengthCheck& StrengthChecker, FileIO& FileOperations);
+void PasswordGen(PasswordGenerator& PassGen, StrengthCheck& StrengthChecker, FileIO& FileOperations);
+void PasswordSearch(PasswordGenerator& PassGen, StrengthCheck& StrengthChecker, FileIO& FileOperations);
 
 int main()
 {
 	std::cout << "Loading...\n";
 	PasswordGenerator PassGen;
+	FileIO FileOperations;
 	StrengthCheck StrengthChecker("words_alpha.txt");
 
-	int option;
-
-	std::cout << "What would you like to do?\n" << "Option 1: Check the strength of an existing password?\n" << "Option 2: Generate a new, secure password?\n" << "Option 3: Close the program.\n" << "Please enter the number of the option you would like: ";
-	std::cin >> option;
-	while (1 == 1) {
-		while (option != 1 && option != 2 && option != 3) {
-			std::cout << "Enter an option number: ";
-			std::cin >> option;
-		} 
-	
-		if (option == 1) {
-			if (!PasswordStrengthCheck(StrengthChecker)) {
-				PasswordStrengthCheck(StrengthChecker);
-			}
-		} if (option == 2) {
-			PasswordGen(PassGen, StrengthChecker);
-		} if (option == 3) {
-			break;
-		}
-	}
+	menu(PassGen, StrengthChecker, FileOperations);
 
 	return 0;
 }
 
-bool PasswordStrengthCheck(StrengthCheck& StrengthChecker) {
+void menu(PasswordGenerator& PassGen, StrengthCheck& StrengthChecker, FileIO& FileOperations) {
+	int option;
+
+	std::cout << "What would you like to do?\n" << "Option 1: Check the strength of an existing password?\n" << "Option 2: Generate a new, secure password?\n" << "Option 3: Retrieve credentials for an existing account?\n" << "Please enter the number of the option you would like: ";
+	std::cin >> option;
+	while (1 == 1) {
+		while (option != 1 && option != 2 && option != 3) {
+			std::cout << "Enter a valid option number: ";
+			std::cin >> option;
+		}
+
+		if (option == 1) {
+			PasswordStrengthCheck(PassGen, StrengthChecker, FileOperations);
+		} if (option == 2) {
+			PasswordGen(PassGen, StrengthChecker, FileOperations);
+		} if (option == 3) {
+			PasswordSearch(PassGen, StrengthChecker, FileOperations);
+		}
+	}
+}
+
+void PasswordStrengthCheck(PasswordGenerator& PassGen, StrengthCheck& StrengthChecker, FileIO& FileOperations) {
 	std::string password;
 	char yn;
 	std::cout << "Enter a password to be checked: ";
 	std::cin >> password;
 	if (StrengthChecker.check(password)) {
 		std::cout << "Password is secure!";
-		return true;
 	}
 	else {
 		std::cout << "Would you like to check another password? (y/n): ";
@@ -53,16 +58,19 @@ bool PasswordStrengthCheck(StrengthCheck& StrengthChecker) {
 			std::cout << "Respond with y or n: ";
 			std::cin >> yn;
 		} if (tolower(yn) == 'y') {
-			return false;
+			PasswordStrengthCheck(PassGen, StrengthChecker, FileOperations);
 		} if (tolower(yn) == 'n') {
-			return true;
+			menu(PassGen, StrengthChecker, FileOperations);
 		}
 	}
 }
 
-void PasswordGen(PasswordGenerator& PassGen, StrengthCheck& StrengthChecker) {
+void PasswordGen(PasswordGenerator& PassGen, StrengthCheck& StrengthChecker, FileIO& FileOperations) {
 	std::string password;
 	int length;
+	char yn;
+	std::string accountName;
+	std::string usernameString;
 
 	std::cout << "Enter desired password length (Min. 12): ";
 	std::cin >> length;
@@ -82,4 +90,59 @@ void PasswordGen(PasswordGenerator& PassGen, StrengthCheck& StrengthChecker) {
 			std::cout << "Password Confirmed: " << password << std::endl;
 		}
 	}
+
+	std::cout << "Would you like to save this password? (y/n): ";
+	std::cin >> yn;
+	while (tolower(yn) != 'y' && tolower(yn) != 'n') {
+		std::cout << "Respond with y or n: ";
+		std::cin >> yn;
+	} if (tolower(yn) == 'y') {
+
+		const char* caccountName = accountName.c_str();
+		const char* cusernameString = usernameString.c_str();
+		const char* cpassword = password.c_str();
+
+		std::cout << "Enter the name of the service or account this password is for: ";
+		std::cin >> accountName;
+		std::cout << "Enter the corresponding username for that account: ";
+		std::cin >> usernameString;
+
+		FileOperations.Write(caccountName, cpassword, cusernameString);
+
+		std::cout << "Would you like to generate another password? (y/n): ";
+		std::cin >> yn;
+		while (tolower(yn) != 'y' && tolower(yn) != 'n') {
+			std::cout << "Respond with y or n: ";
+			std::cin >> yn;
+		} if (tolower(yn) == 'y') {
+			PasswordGen(PassGen, StrengthChecker, FileOperations);
+		} if (tolower(yn) == 'n') {
+			menu(PassGen, StrengthChecker, FileOperations);
+		}
+
+	} if (tolower(yn) == 'n') {
+		menu(PassGen, StrengthChecker, FileOperations);
+	}
+}
+
+void PasswordSearch(PasswordGenerator& PassGen, StrengthCheck& StrengthChecker, FileIO& FileOperations) {
+	std::string accountName = {};
+	char yn;
+
+	std::cout << "Enter the name of the account or service you wish to retrieve credentials for (case sensitive): ";
+	std::cin >> accountName;
+
+	FileOperations.Search(accountName);
+
+	std::cout << "Would you like to search for another account? (y/n): ";
+	std::cin >> yn;
+	while (tolower(yn) != 'y' && tolower(yn) != 'n') {
+		std::cout << "Respond with y or n: ";
+		std::cin >> yn;
+	} if (tolower(yn) == 'y') {
+		PasswordSearch(PassGen, StrengthChecker, FileOperations);
+	} if (tolower(yn) == 'n') {
+		menu(PassGen, StrengthChecker, FileOperations);
+	}
+
 }
