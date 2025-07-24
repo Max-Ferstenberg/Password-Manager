@@ -1,9 +1,6 @@
 #include "FileIO.h"
-#include "tinyxml2.h"
-#include <string>
-#include <iostream>
 
-FileIO::FileIO() : passwords() {
+FileIO::FileIO() : passwords(), salthash() {
 	
 }
 
@@ -60,4 +57,47 @@ void FileIO::Search(std::string accountName) {
 	}
 
 	std::cout << "Account '" << accountName << "' not found." << std::endl;
+}
+
+FileIO::SaltHash FileIO::MPSearch() {
+	if (salthash.LoadFile("salthash.xml") != tinyxml2::XML_SUCCESS) {
+		std::cerr << "Error loading XML file: salthash.xml" << std::endl;
+		return {};
+	}
+
+	tinyxml2::XMLElement* root = salthash.RootElement();
+	if (!root) {
+		std::cerr << "Error: No root element found in XML file." << std::endl;
+		return {};
+	}
+
+	tinyxml2::XMLElement* saltElement = root->FirstChildElement("salt");
+	tinyxml2::XMLElement* pwordhashElement = root->FirstChildElement("pwordhash");
+	tinyxml2::XMLElement* esaltElement = root->FirstChildElement("e_salt");
+
+	if ((saltElement && saltElement->GetText()) && (pwordhashElement && pwordhashElement->GetText()) && esaltElement && esaltElement->GetText()) {
+		std::string salt = saltElement->GetText();
+		std::string pwordhash = pwordhashElement->GetText();
+		std::string e_salt = esaltElement->GetText();
+		return { salt, pwordhash, e_salt };
+	}
+	else {
+		std::cerr << "Master password not initialsed.\n";
+		return {};
+	}
+}
+
+void FileIO::MPWrite(const std::string& salt, const std::string& pwordhash, const std::string& e_salt) {
+	salthash.LoadFile("salthash.xml");
+	tinyxml2::XMLNode* root = salthash.RootElement();;
+	
+	tinyxml2::XMLElement* saltElement = root->FirstChildElement("salt");
+	tinyxml2::XMLElement* pwordhashElement = root->FirstChildElement("pwordhash");
+	tinyxml2::XMLElement* e_saltElement = root->FirstChildElement("e_salt");
+
+	saltElement->SetText(salt.c_str());
+	pwordhashElement->SetText(pwordhash.c_str());
+	e_saltElement->SetText(e_salt.c_str());
+
+	salthash.SaveFile("salthash.xml");
 }
