@@ -1,4 +1,4 @@
-# C++ Password Manager (Learning Project)
+# C++ Password Manager
 
 A CLI password manager written in C++ using [Crypto++](https://www.cryptopp.com/). 
 
