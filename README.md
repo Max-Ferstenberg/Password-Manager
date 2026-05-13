@@ -50,7 +50,7 @@ Open `PasswordManager.sln` in Visual Studio. Requires [Crypto++](https://www.cry
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT, see [LICENCE](LICENCE).
 
 ## Author
 
